@@ -1,0 +1,785 @@
+
+organization_id = organization.get("organization_id");
+estimateID = estimate.get("estimate_id");
+estimate_number = estimate.getJson("estimate_number");
+shipping_address = estimate.getJson("shipping_address");
+from_country_code = "US";
+from_postal_code = "78756";
+to_postal_code = shipping_address.getJson("zip");
+//info to_postal_code;
+to_country_code = shipping_address.getJson("country").toUpperCase().trim();
+line_items = estimate.get("line_items");
+final_shipping_amount = 0;
+custom_data = estimate.getJson("custom_fields");
+carrier_value = "NA";
+promo_code = "None";
+//info custom_data;
+discount_transactional_level = 0;
+for each  data_csm in custom_data
+{
+	csm_id = data_csm.getJson("customfield_id").toLong();
+	if(csm_id == 2093959000000181005)
+	{
+		carrier_value = data_csm.getJson("value");
+	}
+	if(csm_id == 2093959000000397058)
+	{
+		promo_code = data_csm.getJson("value").trim();
+	}
+}
+if(promo_code == "None")
+{
+	discount_transactional_level = 0;
+	expiry_date = "01 jan 2020".toDate();
+}
+else if(promo_code == "Discount 1")
+{
+	discount_transactional_level = "10%";
+	expiry_date = "30 jan 2020".todate();
+}
+else if(promo_code == "Discount 2")
+{
+	discount_transactional_level = "30%";
+	expiry_date = "13 jan 2020".todate();
+}
+else if(promo_code == "NEWYEAR20")
+{
+	discount_transactional_level = "20%";
+	expiry_date = "31 jan 2020".todate();
+}
+else if(promo_code == "Discount 3")
+{
+	discount_transactional_level = "30%";
+	expiry_date = "28 jan 2020".todate();
+}
+else if(promo_code == "Discount 4")
+{
+	discount_transactional_level = "40%";
+	expiry_date = "27 jan 2020".todate();
+}
+// info expiry_date;
+if(expiry_date >= today)
+{
+	discount_transactional_level1 = discount_transactional_level;
+	expiry_date = expiry_date.toString("yyyy-MM-dd");
+}
+else
+{
+	discount_transactional_level1 = 0;
+	expiry_date = expiry_date.toString("yyyy-MM-dd");
+	if(promo_code != "None")
+	{
+		sendmail
+		[
+			from :zoho.adminuserid
+			to :"Jatinder@insightcrew.com"
+			subject :"Coupon code is expired"
+			message :"Coupon code " + promo_code + " is Expired"
+		]
+	}
+}
+//info discount_transactional_level1 + "  " + expiry_date;
+all_country = {"ANDORRA":"AD","UNITEDARABEMIRATES":"AE","AFGHANISTAN":"AF","ANTIGUAANDBARBUDA":"AG","ANGUILLA":"AI","ALBANIA":"AL","ARMENIA":"AM","ANGOLA":"AO","ANTARCTICA":"AQ","ARGENTINA":"AR","AMERICANSAMOA":"AS","AUSTRIA":"AT","AUSTRALIA":"AU","ARUBA":"AW","ÅLANDISLANDS":"AX","AZERBAIJAN":"AZ","BOSNIAANDHERZEGOVINA":"BA","BARBADOS":"BB","BANGLADESH":"BD","BELGIUM":"BE","BURKINAFASO":"BF","BULGARIA":"BG","BAHRAIN":"BH","BURUNDI":"BI","BENIN":"BJ","SAINTBARTHÉLEMY":"BL","BERMUDA":"BM","BRUNEIDARUSSALAM":"BN","BOLIVIA(PLURINATIONALSTATEOF)":"BO","BONAIRE,SINTEUSTATIUSANDSABA":"BQ","BRAZIL":"BR","BAHAMAS":"BS","BHUTAN":"BT","BOUVETISLAND":"BV","BOTSWANA":"BW","BELARUS":"BY","BELIZE":"BZ","CANADA":"CA","COCOS(KEELING)ISLANDS":"CC","CONGO,DEMOCRATICREPUBLICOFTHE":"CD","CENTRALAFRICANREPUBLIC":"CF","CONGO":"CG","SWITZERLAND":"CH","CÔTED'IVOIRE":"CI","COOKISLANDS":"CK","CHILE":"CL","CAMEROON":"CM","CHINA":"CN","COLOMBIA":"CO","COSTARICA":"CR","CUBA":"CU","CABOVERDE":"CV","CURAÇAO":"CW","CHRISTMASISLAND":"CX","CYPRUS":"CY","CZECHIA":"CZ","GERMANY":"DE","DJIBOUTI":"DJ","DENMARK":"DK","DOMINICA":"DM","DOMINICANREPUBLIC":"DO","ALGERIA":"DZ","ECUADOR":"EC","ESTONIA":"EE","EGYPT":"EG","WESTERNSAHARA":"EH","ERITREA":"ER","SPAIN":"ES","ETHIOPIA":"ET","FINLAND":"FI","FIJI":"FJ","FALKLANDISLANDS(MALVINAS)":"FK","MICRONESIA(FEDERATEDSTATESOF)":"FM","FAROEISLANDS":"FO","FRANCE":"FR","GABON":"GA","UNITEDKINGDOMOFGREATBRITAINANDNORTHERNIRELAND":"GB","GRENADA":"GD","GEORGIA":"GE","FRENCHGUIANA":"GF","GUERNSEY":"GG","GHANA":"GH","GIBRALTAR":"GI","GREENLAND":"GL","GAMBIA":"GM","GUINEA":"GN","GUADELOUPE":"GP","EQUATORIALGUINEA":"GQ","GREECE":"GR","SOUTHGEORGIAANDTHESOUTHSANDWICHISLANDS":"GS","GUATEMALA":"GT","GUAM":"GU","GUINEA-BISSAU":"GW","GUYANA":"GY","HONGKONG":"HK","HEARDISLANDANDMCDONALDISLANDS":"HM","HONDURAS":"HN","CROATIA":"HR","HAITI":"HT","HUNGARY":"HU","INDONESIA":"ID","IRELAND":"IE","ISRAEL":"IL","ISLEOFMAN":"IM","INDIA":"IN","BRITISHINDIANOCEANTERRITORY":"IO","IRAQ":"IQ","IRAN(ISLAMICREPUBLICOF)":"IR","ICELAND":"IS","ITALY":"IT","JERSEY":"JE","JAMAICA":"JM","JORDAN":"JO","JAPAN":"JP","KENYA":"KE","KYRGYZSTAN":"KG","CAMBODIA":"KH","KIRIBATI":"KI","COMOROS":"KM","SAINTKITTSANDNEVIS":"KN","KOREA(DEMOCRATICPEOPLE'SREPUBLICOF)":"KP","KOREA,REPUBLICOF":"KR","KUWAIT":"KW","CAYMANISLANDS":"KY","KAZAKHSTAN":"KZ","LAOPEOPLE'SDEMOCRATICREPUBLIC":"LA","LEBANON":"LB","SAINTLUCIA":"LC","LIECHTENSTEIN":"LI","SRILANKA":"LK","LIBERIA":"LR","LESOTHO":"LS","LITHUANIA":"LT","LUXEMBOURG":"LU","LATVIA":"LV","LIBYA":"LY","MOROCCO":"MA","MONACO":"MC","MOLDOVA,REPUBLICOF":"MD","MONTENEGRO":"ME","SAINTMARTIN(FRENCHPART)":"MF","MADAGASCAR":"MG","MARSHALLISLANDS":"MH","NORTHMACEDONIA":"MK","MALI":"ML","MYANMAR":"MM","MONGOLIA":"MN","MACAO":"MO","NORTHERNMARIANAISLANDS":"MP","MARTINIQUE":"MQ","MAURITANIA":"MR","MONTSERRAT":"MS","MALTA":"MT","MAURITIUS":"MU","MALDIVES":"MV","MALAWI":"MW","MEXICO":"MX","MALAYSIA":"MY","MOZAMBIQUE":"MZ","NAMIBIA":"NA","NEWCALEDONIA":"NC","NIGER":"NE","NORFOLKISLAND":"NF","NIGERIA":"NG","NICARAGUA":"NI","NETHERLANDS":"NL","NORWAY":"NO","NEPAL":"NP","NAURU":"NR","NIUE":"NU","NEWZEALAND":"NZ","OMAN":"OM","PANAMA":"PA","PERU":"PE","FRENCHPOLYNESIA":"PF","PAPUANEWGUINEA":"PG","PHILIPPINES":"PH","PAKISTAN":"PK","POLAND":"PL","SAINTPIERREANDMIQUELON":"PM","PITCAIRN":"PN","PUERTORICO":"PR","PALESTINE,STATEOF":"PS","PORTUGAL":"PT","PALAU":"PW","PARAGUAY":"PY","QATAR":"QA","RÉUNION":"RE","ROMANIA":"RO","SERBIA":"RS","RUSSIANFEDERATION":"RU","RWANDA":"RW","SAUDIARABIA":"SA","SOLOMONISLANDS":"SB","SEYCHELLES":"SC","SUDAN":"SD","SWEDEN":"SE","SINGAPORE":"SG","SAINTHELENA,ASCENSIONANDTRISTANDACUNHA":"SH","SLOVENIA":"SI","SVALBARDANDJANMAYEN":"SJ","SLOVAKIA":"SK","SIERRALEONE":"SL","SANMARINO":"SM","SENEGAL":"SN","SOMALIA":"SO","SURINAME":"SR","SOUTHSUDAN":"SS","SAOTOMEANDPRINCIPE":"ST","ELSALVADOR":"SV","SINTMAARTEN(DUTCHPART)":"SX","SYRIANARABREPUBLIC":"SY","ESWATINI":"SZ","TURKSANDCAICOSISLANDS":"TC","CHAD":"TD","FRENCHSOUTHERNTERRITORIES":"TF","TOGO":"TG","THAILAND":"TH","TAJIKISTAN":"TJ","TOKELAU":"TK","TIMOR-LESTE":"TL","TURKMENISTAN":"TM","TUNISIA":"TN","TONGA":"TO","TURKEY":"TR","TRINIDADANDTOBAGO":"TT","TUVALU":"TV","TAIWAN,PROVINCEOFCHINA":"TW","TANZANIA,UNITEDREPUBLICOF":"TZ","UKRAINE":"UA","UGANDA":"UG","UNITEDSTATESMINOROUTLYINGISLANDS":"UM","UNITEDSTATESOFAMERICA":"US","URUGUAY":"UY","UZBEKISTAN":"UZ","HOLYSEE":"VA","SAINTVINCENTANDTHEGRENADINES":"VC","VENEZUELA(BOLIVARIANREPUBLICOF)":"VE","VIRGINISLANDS(BRITISH)":"VG","VIRGINISLANDS(U.S.)":"VI","VIETNAM":"VN","VANUATU":"VU","WALLISANDFUTUNA":"WF","SAMOA":"WS","YEMEN":"YE","MAYOTTE":"YT","SOUTHAFRICA":"ZA","ZAMBIA":"ZM","ZIMBABWE":"ZW","UNITED STATES":"US","USA":"US","U.S.A":"US","U.S":"US"};
+if(all_country.containKey(to_country_code))
+{
+	to_country_code = all_country.getJson(to_country_code);
+}
+ups_service_type1 = 0;
+ups_service_type2 = 0;
+ups_service_type3 = 0;
+ups_service_type4 = 0;
+ups_service_type5 = 0;
+ups_service_type6 = 0;
+ups_service_type7 = 0;
+fedex_service_type1 = 0;
+fedex_service_type2 = 0;
+fedex_service_type3 = 0;
+fedex_service_type4 = 0;
+fedex_service_type5 = 0;
+fedex_service_type6 = 0;
+fedex_service_type7 = 0;
+stamps_service_type1 = 0;
+stamps_service_type2 = 0;
+stamps_service_type3 = 0;
+stamps_service_type4 = 0;
+stamps_service_type5 = 0;
+stamps_service_type6 = 0;
+stamps_service_type7 = 0;
+stamps_service_type8 = 0;
+stamps_service_type9 = 0;
+stamps_service_type10 = 0;
+stamps_service_type11 = 0;
+stamps_service_type12 = 0;
+stamps_service_type13 = 0;
+stamps_service_type14 = 0;
+stamps_service_type15 = 0;
+dhl_service_type = 0;
+ups_worldwide_saver = 0;
+ups_worldwide_expedited = 0;
+FedEx_International_Ground = 0;
+fedex_international_economy = 0;
+fedex_international_priority = 0;
+usps_priority_mail_international1 = 0;
+usps_priority_mail_international2 = 0;
+usps_priority_mail_international3 = 0;
+usps_priority_mail_international4 = 0;
+usps_priority_mail_international5 = 0;
+usps_priority_mail_international6 = 0;
+usps_priority_mail_international7 = 0;
+usps_priority_mail_international8 = 0;
+usps_priority_mail_international9 = 0;
+usps_priority_mail_international10 = 0;
+usps_priority_mail_international11 = 0;
+usps_priority_mail_international12 = 0;
+express_worldwide = 0;
+carrier_lists = {"se-153758","se-153761","se-152863","se-153762"};
+for each  carrier in carrier_lists
+{
+	for each  items_data in line_items
+	{
+		item_flag = 0;
+		store_value = 1;
+		custom_fields = items_data.getJson("item_custom_fields");
+		for each  cst_data in custom_fields
+		{
+			label = cst_data.get("label");
+			if(label == "Weight")
+			{
+				weight_value = cst_data.getJson("value");
+				if(weight_value.contains("Custom") || weight_value.contains("NA"))
+				{
+					item_flag = 1;
+				}
+				if(weight_value.contains("(2)"))
+				{
+					weight_value = weight_value.getPrefix("(");
+					store_value = store_value * 2;
+				}
+				else if(weight_value.contains("(4)"))
+				{
+					weight_value = weight_value.getPrefix("(");
+					store_value = store_value * 2;
+				}
+			}
+			if(label == "Dimensions")
+			{
+				Dimensions_value = cst_data.getJson("value");
+				if(Dimensions_value.contains("Custom") || Dimensions_value.contains("NA"))
+				{
+					item_flag = 1;
+				}
+				else
+				{
+					dimension_list = Dimensions_value.toList("x");
+					//info dimension_list;
+					length = dimension_list.get(0);
+					width = dimension_list.get(1);
+					height = dimension_list.get(2);
+					if(height.contains("(2)") || height.contains("(4)"))
+					{
+						height = height.getPrefix("(");
+					}
+				}
+			}
+		}
+		if(item_flag != 1)
+		{
+			header = Map();
+			header.put("API-Key","2DF7sMVx5g1Mop0NRbQZiKI7+58HU8n4C/LCeMDK3EQ");
+			header.put("Content-Type","application/json");
+			carrier_ids = list();
+			carrier_ids.add(carrier);
+			weight = {"value":weight_value,"unit":"pound"};
+			dimensions = {"unit":"inch","length":length,"width":width,"height":height};
+			param = Map();
+			param.put("carrier_ids",carrier_ids);
+			param.put("from_country_code","US");
+			param.put("from_postal_code","84043");
+			param.put("to_country_code",to_country_code);
+			param.put("to_postal_code",to_postal_code);
+			param.put("weight",weight);
+			param.put("dimensions",dimensions);
+			param.put("confirmation","none");
+			param.put("address_residential_indicator","no");
+			// param = {"carrier_ids":{"se-152863"},"from_country_code":"US","from_postal_code":"78756","to_country_code":"US","to_postal_code":"95128","weight":{"value":1.0,"unit":"ounce"},"dimensions":{"unit":"inch","length":5.0,"width":5.0,"height":5.0},"confirmation":"none","address_residential_indicator":"no"};
+			Response = invokeurl
+			[
+				url :"https://api.shipengine.com/v1/rates/estimate"
+				type :POST
+				parameters:param.toString()
+				headers:header
+			];
+			for each  res_data in Response
+			{
+				if(to_country_code == "US" && carrier != "se-153762" && Response.notcontains("request_id"))
+				{
+					service_code = res_data.getJson("service_type");
+					package_type = res_data.getJson("package_type");
+					error_messages = res_data.getJson("error_messages");
+					if(error_messages.isEmpty() == False)
+					{
+						carrier_is = res_data.getJson("carrier_id");
+						sendmail
+						[
+							from :zoho.adminuserid
+							to :'jatinder@insightcrew.com'
+							subject :'Error in carrier API'
+							message :"The error message for the Carrier id  " + carrier_is + "  package type " + package_type + " and Service Type " + service_code + " is " + error_messages
+						]
+					}
+					if(service_code == "UPS 2nd Day Air®")
+					{
+						shipping_amount = res_data.getJson("shipping_amount");
+						amount = shipping_amount.get("amount") * store_value;
+						ups_service_type1 = ups_service_type1 + amount;
+					}
+					if(service_code == "UPS 2nd Day Air AM®")
+					{
+						shipping_amount = res_data.getJson("shipping_amount");
+						amount = shipping_amount.get("amount") * store_value;
+						ups_service_type2 = ups_service_type2 + amount;
+					}
+					if(service_code == "UPS 3 Day Select®")
+					{
+						shipping_amount = res_data.getJson("shipping_amount");
+						amount = shipping_amount.get("amount") * store_value;
+						ups_service_type3 = ups_service_type3 + amount;
+					}
+					if(service_code == "UPS® Ground")
+					{
+						shipping_amount = res_data.getJson("shipping_amount");
+						amount = shipping_amount.get("amount") * store_value;
+						ups_service_type4 = ups_service_type4 + amount;
+					}
+					if(service_code == "UPS Next Day Air®")
+					{
+						shipping_amount = res_data.getJson("shipping_amount");
+						amount = shipping_amount.get("amount") * store_value;
+						ups_service_type5 = ups_service_type5 + amount;
+					}
+					if(service_code == "UPS Next Day Air® Early")
+					{
+						shipping_amount = res_data.getJson("shipping_amount");
+						amount = shipping_amount.get("amount") * store_value;
+						ups_service_type6 = ups_service_type6 + amount;
+					}
+					if(service_code == "UPS Next Day Air Saver®")
+					{
+						shipping_amount = res_data.getJson("shipping_amount");
+						amount = shipping_amount.get("amount") * store_value;
+						ups_service_type7 = ups_service_type7 + amount;
+					}
+					if(service_code == "FedEx 2Day®")
+					{
+						shipping_amount = res_data.getJson("shipping_amount");
+						amount = shipping_amount.get("amount") * store_value;
+						fedex_service_type1 = fedex_service_type1 + amount;
+					}
+					if(service_code == "FedEx 2Day® A.M.")
+					{
+						shipping_amount = res_data.getJson("shipping_amount");
+						amount = shipping_amount.get("amount") * store_value;
+						fedex_service_type2 = fedex_service_type2 + amount;
+					}
+					if(service_code == "FedEx Express Saver®")
+					{
+						shipping_amount = res_data.getJson("shipping_amount");
+						amount = shipping_amount.get("amount") * store_value;
+						fedex_service_type3 = fedex_service_type3 + amount;
+					}
+					if(service_code == "FedEx First Overnight®")
+					{
+						shipping_amount = res_data.getJson("shipping_amount");
+						amount = shipping_amount.get("amount") * store_value;
+						fedex_service_type4 = fedex_service_type4 + amount;
+					}
+					if(service_code == "FedEx Ground®")
+					{
+						shipping_amount = res_data.getJson("shipping_amount");
+						amount = shipping_amount.get("amount") * store_value;
+						fedex_service_type5 = fedex_service_type5 + amount;
+					}
+					if(service_code == "FedEx Priority Overnight®")
+					{
+						shipping_amount = res_data.getJson("shipping_amount");
+						amount = shipping_amount.get("amount") * store_value;
+						fedex_service_type6 = fedex_service_type6 + amount;
+					}
+					if(service_code == "FedEx Standard Overnight®")
+					{
+						shipping_amount = res_data.getJson("shipping_amount");
+						amount = shipping_amount.get("amount") * store_value;
+						fedex_service_type7 = fedex_service_type7 + amount;
+					}
+					if(service_code == "USPS Media Mail" && package_type == "package")
+					{
+						shipping_amount = res_data.getJson("shipping_amount");
+						amount = shipping_amount.get("amount") * store_value;
+						stamps_service_type1 = stamps_service_type1 + amount;
+					}
+					if(service_code == "USPS Parcel Select Ground" && package_type == "package")
+					{
+						shipping_amount = res_data.getJson("shipping_amount");
+						amount = shipping_amount.get("amount") * store_value;
+						stamps_service_type2 = stamps_service_type2 + amount;
+					}
+					if(service_code == "USPS Priority Mail" && package_type == "package")
+					{
+						shipping_amount = res_data.getJson("shipping_amount");
+						amount = shipping_amount.get("amount") * store_value;
+						stamps_service_type3 = stamps_service_type3 + amount;
+					}
+					if(service_code == "USPS Priority Mail" && package_type == "medium_flat_rate_box")
+					{
+						shipping_amount = res_data.getJson("shipping_amount");
+						amount = shipping_amount.get("amount") * store_value;
+						stamps_service_type4 = stamps_service_type4 + amount;
+					}
+					if(service_code == "USPS Priority Mail" && package_type == "small_flat_rate_box")
+					{
+						shipping_amount = res_data.getJson("shipping_amount");
+						amount = shipping_amount.get("amount") * store_value;
+						stamps_service_type5 = stamps_service_type5 + amount;
+					}
+					if(service_code == "USPS Priority Mail" && package_type == "large_flat_rate_box")
+					{
+						shipping_amount = res_data.getJson("shipping_amount");
+						amount = shipping_amount.get("amount") * store_value;
+						stamps_service_type6 = stamps_service_type6 + amount;
+					}
+					if(service_code == "USPS Priority Mail" && package_type == "flat_rate_envelope")
+					{
+						shipping_amount = res_data.getJson("shipping_amount");
+						amount = shipping_amount.get("amount") * store_value;
+						stamps_service_type7 = stamps_service_type7 + amount;
+					}
+					if(service_code == "USPS Priority Mail" && package_type == "flat_rate_padded_envelope")
+					{
+						shipping_amount = res_data.getJson("shipping_amount");
+						amount = shipping_amount.get("amount") * store_value;
+						stamps_service_type8 = stamps_service_type8 + amount;
+					}
+					if(service_code == "USPS Priority Mail" && package_type == "regional_rate_box_a")
+					{
+						shipping_amount = res_data.getJson("shipping_amount");
+						amount = shipping_amount.get("amount") * store_value;
+						stamps_service_type9 = stamps_service_type9 + amount;
+					}
+					if(service_code == "USPS Priority Mail" && package_type == "regional_rate_box_b")
+					{
+						shipping_amount = res_data.getJson("shipping_amount");
+						amount = shipping_amount.get("amount") * store_value;
+						stamps_service_type10 = stamps_service_type10 + amount;
+					}
+					if(service_code == "USPS Priority Mail" && package_type == "flat_rate_legal_envelope")
+					{
+						shipping_amount = res_data.getJson("shipping_amount");
+						amount = shipping_amount.get("amount") * store_value;
+						stamps_service_type11 = stamps_service_type11 + amount;
+					}
+					if(service_code == "USPS Priority Mail Express" && package_type == "package")
+					{
+						shipping_amount = res_data.getJson("shipping_amount");
+						amount = shipping_amount.get("amount") * store_value;
+						stamps_service_type12 = stamps_service_type12 + amount;
+					}
+					if(service_code == "USPS Priority Mail Express" && package_type == "flat_rate_envelope")
+					{
+						shipping_amount = res_data.getJson("shipping_amount");
+						amount = shipping_amount.get("amount") * store_value;
+						stamps_service_type13 = stamps_service_type13 + amount;
+					}
+					if(service_code == "USPS Priority Mail Express" && package_type == "flat_rate_padded_envelope")
+					{
+						shipping_amount = res_data.getJson("shipping_amount");
+						amount = shipping_amount.get("amount") * store_value;
+						stamps_service_type14 = stamps_service_type14 + amount;
+					}
+					if(service_code == "USPS Priority Mail Express" && package_type == "flat_rate_legal_envelope")
+					{
+						shipping_amount = res_data.getJson("shipping_amount");
+						amount = shipping_amount.get("amount") * store_value;
+						stamps_service_type15 = stamps_service_type15 + amount;
+					}
+					if(service_code == "USPS Priority Mail Express" && package_type == "flat_rate_legal_envelope")
+					{
+						shipping_amount = res_data.getJson("shipping_amount");
+						amount = shipping_amount.get("amount") * store_value;
+						stamps_service_type15 = stamps_service_type15 + amount;
+					}
+				}
+				else if(to_country_code != "US" && Response.notcontains("request_id"))
+				{
+					service_code = res_data.getJson("service_type");
+					package_type = res_data.getJson("package_type");
+					error_messages = res_data.getJson("error_messages");
+					if(error_messages.isEmpty() == False)
+					{
+						carrier_is = res_data.getJson("carrier_id");
+						sendmail
+						[
+							from :zoho.adminuserid
+							to :'jatinder@insightcrew.com'
+							subject :'Error in carrier API'
+							message :"The error message for the Carrier id  " + carrier_is + "  package type " + package_type + " and Service Type " + service_code + " is " + error_messages
+						]
+					}
+					//info service_code + " "+ package_type;
+					if(service_code == "UPS Worldwide Expedited®")
+					{
+						shipping_amount = res_data.getJson("shipping_amount");
+						amount = shipping_amount.get("amount") * store_value;
+						ups_worldwide_expedited = ups_worldwide_expedited + amount;
+					}
+					if(service_code == "UPS Worldwide Saver®")
+					{
+						shipping_amount = res_data.getJson("shipping_amount");
+						amount = shipping_amount.get("amount") * store_value;
+						ups_worldwide_saver = ups_worldwide_saver + amount;
+					}
+					if(service_code == "FedEx International Economy®")
+					{
+						shipping_amount = res_data.getJson("shipping_amount");
+						amount = shipping_amount.get("amount") * store_value;
+						fedex_international_economy = fedex_international_economy + amount;
+					}
+					if(service_code == "FedEx International Priority®")
+					{
+						shipping_amount = res_data.getJson("shipping_amount");
+						amount = shipping_amount.get("amount") * store_value;
+						fedex_international_priority = fedex_international_priority + amount;
+					}
+					if(service_code == "FedEx International Ground®")
+					{
+						shipping_amount = res_data.getJson("shipping_amount");
+						amount = shipping_amount.get("amount") * store_value;
+						FedEx_International_Ground = FedEx_International_Ground + amount;
+					}
+					if(service_code == "USPS First Class Mail Intl" && package_type == "package")
+					{
+						shipping_amount = res_data.getJson("shipping_amount");
+						amount = shipping_amount.get("amount") * store_value;
+						usps_priority_mail_international1 = usps_priority_mail_international1 + amount;
+					}
+					if(service_code == "USPS Priority Mail Express Intl" && package_type == "package")
+					{
+						shipping_amount = res_data.getJson("shipping_amount");
+						amount = shipping_amount.get("amount") * store_value;
+						usps_priority_mail_international2 = usps_priority_mail_international2 + amount;
+					}
+					if(service_code == "USPS Priority Mail Express Intl" && package_type == "flat_rate_envelope")
+					{
+						shipping_amount = res_data.getJson("shipping_amount");
+						amount = shipping_amount.get("amount") * store_value;
+						usps_priority_mail_international3 = usps_priority_mail_international3 + amount;
+					}
+					if(service_code == "USPS Priority Mail Express Intl" && package_type == "flat_rate_padded_envelope")
+					{
+						shipping_amount = res_data.getJson("shipping_amount");
+						amount = shipping_amount.get("amount") * store_value;
+						usps_priority_mail_international4 = usps_priority_mail_international4 + amount;
+					}
+					if(service_code == "USPS Priority Mail Express Intl" && package_type == "flat_rate_legal_envelope")
+					{
+						shipping_amount = res_data.getJson("shipping_amount");
+						amount = shipping_amount.get("amount") * store_value;
+						usps_priority_mail_international5 = usps_priority_mail_international5 + amount;
+					}
+					if(service_code == "USPS Priority Mail Intl" && package_type == "package")
+					{
+						shipping_amount = res_data.getJson("shipping_amount");
+						amount = shipping_amount.get("amount") * store_value;
+						usps_priority_mail_international6 = usps_priority_mail_international6 + amount;
+					}
+					if(service_code == "USPS Priority Mail Intl" && package_type == "medium_flat_rate_box")
+					{
+						shipping_amount = res_data.getJson("shipping_amount");
+						amount = shipping_amount.get("amount") * store_value;
+						usps_priority_mail_international7 = usps_priority_mail_international7 + amount;
+					}
+					if(service_code == "USPS Priority Mail Intl" && package_type == "small_flat_rate_box")
+					{
+						shipping_amount = res_data.getJson("shipping_amount");
+						amount = shipping_amount.get("amount") * store_value;
+						usps_priority_mail_international8 = usps_priority_mail_international8 + amount;
+					}
+					if(service_code == "USPS Priority Mail Intl" && package_type == "large_flat_rate_box")
+					{
+						shipping_amount = res_data.getJson("shipping_amount");
+						amount = shipping_amount.get("amount") * store_value;
+						usps_priority_mail_international9 = usps_priority_mail_international9 + amount;
+					}
+					if(service_code == "USPS Priority Mail Intl" && package_type == "flat_rate_envelope")
+					{
+						shipping_amount = res_data.getJson("shipping_amount");
+						amount = shipping_amount.get("amount") * store_value;
+						usps_priority_mail_international10 = usps_priority_mail_international10 + amount;
+					}
+					if(service_code == "USPS Priority Mail Intl" && package_type == "flat_rate_padded_envelope")
+					{
+						shipping_amount = res_data.getJson("shipping_amount");
+						amount = shipping_amount.get("amount") * store_value;
+						usps_priority_mail_international11 = usps_priority_mail_international11 + amount;
+					}
+					if(service_code == "USPS Priority Mail Intl" && package_type == "flat_rate_legal_envelope")
+					{
+						shipping_amount = res_data.getJson("shipping_amount");
+						amount = shipping_amount.get("amount") * store_value;
+						usps_priority_mail_international12 = usps_priority_mail_international12 + amount;
+					}
+					if(service_code == "Express Worldwide")
+					{
+						shipping_amount = res_data.getJson("shipping_amount");
+						amount = shipping_amount.get("amount") * store_value;
+						express_worldwide = express_worldwide + amount;
+					}
+				}
+			}
+			//resonse
+		}
+		//flag
+	}
+	//item
+}
+//carrier
+param = Map();
+param.put("authtoken","c06a04605717103b37a96bd563a02a5c");
+param.put("scope","creatorapi");
+param.put("criteria",'Name == "Estimate rate"');
+param.put("EstimateID",estimate_number);
+param.put("Carrier_Type",carrier_value);
+param.put("ups_service_type1",ups_service_type1);
+param.put("ups_service_type2",ups_service_type2);
+param.put("ups_service_type3",ups_service_type3);
+param.put("ups_service_type4",ups_service_type4);
+param.put("ups_service_type5",ups_service_type5);
+param.put("ups_service_type6",ups_service_type6);
+param.put("ups_service_type7",ups_service_type7);
+param.put("fedex_service_type1",fedex_service_type1);
+param.put("fedex_service_type2",fedex_service_type2);
+param.put("fedex_service_type3",fedex_service_type3);
+param.put("fedex_service_type4",fedex_service_type4);
+param.put("fedex_service_type5",fedex_service_type5);
+param.put("fedex_service_type6",fedex_service_type6);
+param.put("fedex_service_type7",fedex_service_type7);
+param.put("stamps_service_type1",stamps_service_type1);
+param.put("stamps_service_type2",stamps_service_type2);
+param.put("stamps_service_type3",stamps_service_type3);
+param.put("stamps_service_type4",stamps_service_type4);
+param.put("stamps_service_type5",stamps_service_type5);
+param.put("stamps_service_type6",stamps_service_type6);
+param.put("stamps_service_type7",stamps_service_type7);
+param.put("stamps_service_type8",stamps_service_type8);
+param.put("stamps_service_type9",stamps_service_type9);
+param.put("stamps_service_type10",stamps_service_type10);
+param.put("stamps_service_type11",stamps_service_type11);
+param.put("stamps_service_type12",stamps_service_type12);
+param.put("stamps_service_type13",stamps_service_type13);
+param.put("stamps_service_type14",stamps_service_type14);
+param.put("stamps_service_type15",stamps_service_type15);
+param.put("ups_worldwide_expedited",ups_worldwide_expedited);
+param.put("ups_worldwide_saver",ups_worldwide_saver);
+param.put("fedex_international_economy",fedex_international_economy);
+param.put("fedex_international_priority",fedex_international_priority);
+param.put("FedEx_International_Ground",FedEx_International_Ground);
+param.put("usps_priority_mail_international1",usps_priority_mail_international1);
+param.put("usps_priority_mail_international2",usps_priority_mail_international2);
+param.put("usps_priority_mail_international3",usps_priority_mail_international3);
+param.put("usps_priority_mail_international4",usps_priority_mail_international4);
+param.put("usps_priority_mail_international5",usps_priority_mail_international5);
+param.put("usps_priority_mail_international6",usps_priority_mail_international6);
+param.put("usps_priority_mail_international7",usps_priority_mail_international7);
+param.put("usps_priority_mail_international8",usps_priority_mail_international8);
+param.put("usps_priority_mail_international9",usps_priority_mail_international9);
+param.put("usps_priority_mail_international10",usps_priority_mail_international10);
+param.put("usps_priority_mail_international11",usps_priority_mail_international11);
+param.put("usps_priority_mail_international12",usps_priority_mail_international12);
+//info usps_priority_mail_international12;
+param.put("Express_Worldwide",express_worldwide);
+res = invokeurl
+[
+	url :"https://creator.zoho.com/api/contact3290/json/insightcrew-app/form/Zoho_Books/record/update"
+	type :POST
+	parameters:param
+];
+// //info ups_service_type3+"/n"+ ups_service_type1 +"/n"+ups_service_type2;
+for each  data_cf in custom_data
+{
+	cst_id = data_cf.getJson("customfield_id").toLong();
+	if(cst_id == 2093959000000181005)
+	{
+		cst_value = data_cf.getJson("value");
+		info cst_value;
+		if(cst_value.contains("UPS"))
+		{
+			carrier_id = "se-153758";
+		}
+		else if(cst_value.contains("FedEx"))
+		{
+			carrier_id = "se-153761";
+		}
+		else if(cst_value.contains("Stamps"))
+		{
+			carrier_id = "se-152863";
+		}
+		else if(cst_value.contains("DHL Express"))
+		{
+			carrier_id = "se-153762";
+		}
+		else
+		{
+			carrier_id = "NA";
+		}
+		//info cst_value;
+	}
+}
+//info carrier_id;
+update_date_expiry = list();
+cst_date_update = Map();
+cst_date_update.put("index","3");
+cst_date_update.put("value",expiry_date);
+//cst_date_update = {"index":"3","value":expiry_date.todate("yyyy-MM-dd")};
+update_date_expiry.add(cst_date_update);
+if(carrier_id != "NA")
+{
+	drop_list = cst_value.toList("|");
+	//info drop_list ;
+	if(drop_list.size() == 2)
+	{
+		drop_down_value_service_type = trim(drop_list.get(1));
+		drop_down_value_package_type = null;
+	}
+	else
+	{
+		drop_down_value_service_type = trim(drop_list.get(2));
+		drop_down_value_package_type = trim(drop_list.get(1));
+	}
+	final_update = list();
+	for each  items_data in line_items
+	{
+		item_flag = 0;
+		amount = 0;
+		item_id = items_data.getJson("item_id");
+		line_item_id = items_data.getJson("line_item_id");
+		store_value = 1;
+		//info line_item_id;
+		custom_fields = items_data.getJson("item_custom_fields");
+		for each  cst_data in custom_fields
+		{
+			label = cst_data.get("label");
+			if(label == "Weight")
+			{
+				weight_value = cst_data.getJson("value");
+				if(weight_value.contains("Custom") || weight_value.contains("NA"))
+				{
+					item_flag = 1;
+				}
+				if(weight_value.contains("(2)"))
+				{
+					weight_value = weight_value.getPrefix("(");
+					store_value = store_value * 2;
+				}
+				else if(weight_value.contains("(4)"))
+				{
+					weight_value = weight_value.getPrefix("(");
+					store_value = store_value * 2;
+				}
+			}
+			if(label == "Dimensions")
+			{
+				Dimensions_value = cst_data.getJson("value");
+				if(Dimensions_value == "Custom" || Dimensions_value.contains("NA"))
+				{
+					item_flag = 1;
+				}
+				else
+				{
+					dimension_list = Dimensions_value.toList("x");
+					//info dimension_list;
+					length = dimension_list.get(0);
+					width = dimension_list.get(1);
+					height = dimension_list.get(2);
+					if(height.contains("(2)") || height.contains("(4)"))
+					{
+						height = height.getPrefix("(");
+					}
+				}
+			}
+		}
+		if(item_flag != 1)
+		{
+			header = Map();
+			header.put("API-Key","2DF7sMVx5g1Mop0NRbQZiKI7+58HU8n4C/LCeMDK3EQ");
+			header.put("Content-Type","application/json");
+			carrier_ids = list();
+			carrier_ids.add(carrier_id);
+			weight = {"value":weight_value,"unit":"pound"};
+			dimensions = {"unit":"inch","length":length,"width":width,"height":height};
+			param = Map();
+			param.put("carrier_ids",carrier_ids);
+			param.put("from_country_code","US");
+			param.put("from_postal_code","84043");
+			param.put("to_country_code",to_country_code);
+			param.put("to_postal_code",to_postal_code);
+			param.put("weight",weight);
+			param.put("dimensions",dimensions);
+			param.put("confirmation","none");
+			param.put("address_residential_indicator","no");
+			// param = {"carrier_ids":{"se-152863"},"from_country_code":"US","from_postal_code":"78756","to_country_code":"US","to_postal_code":"95128","weight":{"value":1.0,"unit":"ounce"},"dimensions":{"unit":"inch","length":5.0,"width":5.0,"height":5.0},"confirmation":"none","address_residential_indicator":"no"};
+			Response = invokeurl
+			[
+				url :"https://api.shipengine.com/v1/rates/estimate"
+				type :POST
+				parameters:param.toString()
+				headers:header
+			];
+			for each  res_data in Response
+			{
+				if(to_country_code == "US" && carrier_id != "se-153762" && Response.notcontains("request_id"))
+				{
+					service_code = res_data.getJson("service_type");
+					package_type = res_data.getJson("package_type");
+					if(service_code == drop_down_value_service_type && package_type == drop_down_value_package_type)
+					{
+						shipping_amount = res_data.getJson("shipping_amount");
+						amount = shipping_amount.getJSON("amount").toDecimal() * store_value;
+					}
+				}
+				else if(to_country_code != "US" && Response.notcontains("request_id"))
+				{
+					service_code = res_data.getJson("service_type");
+					package_type = res_data.getJson("package_type");
+					if(service_code == drop_down_value_service_type && package_type == drop_down_value_package_type)
+					{
+						shipping_amount = res_data.getJson("shipping_amount");
+						amount = shipping_amount.getJSON("amount").toDecimal() * store_value;
+					}
+				}
+			}
+			// response
+		}
+		// item_flg
+		ls_map = Map();
+		ls_map.put("customfield_id",2093959000000123091);
+		ls_map.put("value",amount);
+		final_shipping_amount = final_shipping_amount + amount;
+		lst_item = list();
+		lst_item.add(ls_map);
+		update_value = {"item_id":item_id,"line_item_id":line_item_id.toLong(),"item_custom_fields":lst_item};
+		final_update.add(update_value);
+	}
+	//item
+	line_item_updatee = {"line_items":final_update,"shipping_charge":final_shipping_amount,"discount":discount_transactional_level1,"custom_fields":update_date_expiry};
+	//info line_item_updatee;
+	// 	update = zoho.books.updateRecord("Estimates",organization_id,estimateID,line_item_updatee);
+}
+else
+{
+	line_item_updatee = {"shipping_charge":0,"discount":discount_transactional_level1,"custom_fields":update_date_expiry};
+}
+update = zoho.books.updateRecord("Estimates",organization_id,estimateID,line_item_updatee);
+info update;
+// carrier_list= ["se-153758","se-153761"];
+// for each test in carrier_list
+// {
+// }
